@@ -26,18 +26,16 @@ export function SidebarNav() {
         const isActive = pathname === link.href;
         return (
           <SidebarMenuItem key={link.href}>
-            <Link href={link.href} className="w-full" legacyBehavior passHref>
-              <SidebarMenuButton
-                asChild
-                isActive={isActive}
-                tooltip={link.label}
-              >
-                <a>
-                  <link.icon />
-                  <span>{link.label}</span>
-                </a>
-              </SidebarMenuButton>
-            </Link>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive}
+              tooltip={link.label}
+            >
+              <Link href={link.href}>
+                <link.icon />
+                <span>{link.label}</span>
+              </Link>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         );
       })}
