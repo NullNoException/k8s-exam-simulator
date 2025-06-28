@@ -35,7 +35,7 @@ export default function PracticePage() {
       topic,
       difficulty,
       questions: result.questions.map((q) => ({
-        text: q,
+        ...q,
         userAnswer: '',
         status: 'unanswered',
       })),

@@ -1,8 +1,8 @@
 'use client';
 
 import * as React from 'react';
-import { CheckCircle2, XCircle, Loader2, ChevronLeft, ChevronRight } from 'lucide-react';
-import type { PracticeSession, Question } from '@/lib/types';
+import { CheckCircle2, XCircle, Loader2, ChevronLeft, ChevronRight, Terminal } from 'lucide-react';
+import type { PracticeSession } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -32,17 +32,20 @@ export function PracticeView({ session, setSession, onEndSession }: PracticeView
     updatedQuestions[currentQuestionIndex].userAnswer = e.target.value;
     setSession({ ...session, questions: updatedQuestions });
   };
+  
+  const normalize = (str: string) => str.trim().replace(/\s+/g, ' ');
 
   const handleValidate = () => {
     setIsValidating(true);
     // Simulate validation
     setTimeout(() => {
-      const isCorrect = Math.random() > 0.4; // 60% chance of being correct
+      const isCorrect = normalize(currentQuestion.userAnswer) === normalize(currentQuestion.solution);
       const updatedQuestions = [...session.questions];
-      updatedQuestions[currentQuestionIndex].status = isCorrect ? 'correct' : 'incorrect';
+      const status = isCorrect ? 'correct' : 'incorrect';
+      updatedQuestions[currentQuestionIndex].status = status;
       updatedQuestions[currentQuestionIndex].feedback = isCorrect
-        ? 'All checks passed! The resources were configured correctly.'
-        : 'Validation failed. Expected 3 replicas, but found 2. The service type should be ClusterIP, not NodePort.';
+        ? `Validation successful! The verification command \`${currentQuestion.validation}\` would return the expected output: '${currentQuestion.expectedValidationOutput}'.`
+        : `Validation failed. Your answer did not produce the expected outcome. Review the solution to see the correct approach.`;
       
       setSession({ ...session, questions: updatedQuestions });
       setIsValidating(false);
@@ -88,14 +91,27 @@ export function PracticeView({ session, setSession, onEndSession }: PracticeView
             </div>
             <Button variant="outline" size="sm" onClick={onEndSession}>End Session</Button>
         </div>
-        <CardDescription className="pt-4 text-base text-foreground">
-          {currentQuestion.text}
-        </CardDescription>
         <div className="pt-4">
             <Progress value={progress} />
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {currentQuestion.setup && currentQuestion.setup.length > 0 && (
+          <Alert>
+            <Terminal className="h-4 w-4" />
+            <AlertTitle>Environment Setup</AlertTitle>
+            <AlertDescription>
+              <p className="mb-2">The following setup is assumed to have been applied to your cluster:</p>
+              <pre className="p-2 rounded-md bg-muted font-code text-sm whitespace-pre-wrap">
+                {currentQuestion.setup}
+              </pre>
+            </AlertDescription>
+          </Alert>
+        )}
+        <p className="pt-4 text-base text-foreground">
+          {currentQuestion.text}
+        </p>
+
         <div>
           <label htmlFor="answer-workspace" className="font-medium text-sm mb-2 block">Answer Workspace</label>
           <Textarea
@@ -115,7 +131,15 @@ export function PracticeView({ session, setSession, onEndSession }: PracticeView
             }
             <AlertTitle>{currentQuestion.status === 'correct' ? 'Correct' : 'Incorrect'}</AlertTitle>
             <AlertDescription>
-              {currentQuestion.feedback}
+              <p>{currentQuestion.feedback}</p>
+              {currentQuestion.status === 'incorrect' && (
+                <>
+                  <p className="font-semibold mt-4 mb-2">Expected Solution:</p>
+                  <pre className="p-2 rounded-md bg-secondary/50 font-code text-sm whitespace-pre-wrap">
+                    {currentQuestion.solution}
+                  </pre>
+                </>
+              )}
             </AlertDescription>
           </Alert>
         )}

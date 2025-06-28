@@ -1,5 +1,9 @@
 export interface Question {
   text: string;
+  setup: string;
+  solution: string;
+  validation: string;
+  expectedValidationOutput: string;
   userAnswer: string;
   status: 'unanswered' | 'correct' | 'incorrect';
   feedback?: string;

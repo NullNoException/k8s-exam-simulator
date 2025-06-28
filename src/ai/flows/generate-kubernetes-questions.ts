@@ -5,6 +5,7 @@
  *
  * - generateKubernetesQuestions - A function that generates Kubernetes certification questions.
  * - GenerateKubernetesQuestionsInput - The input type for the generateKubernetesQuestions function.
+ * - QuestionDetail - The type for a single generated question.
  * - GenerateKubernetesQuestionsOutput - The return type for the generateKubernetesQuestions function.
  */
 
@@ -24,8 +25,17 @@ export type GenerateKubernetesQuestionsInput = z.infer<
   typeof GenerateKubernetesQuestionsInputSchema
 >;
 
+const QuestionDetailSchema = z.object({
+  text: z.string().describe('The scenario-based question text.'),
+  setup: z.string().describe('The YAML or bash commands needed to set up the initial cluster state for the question. This can be an empty string if not needed.'),
+  solution: z.string().describe('The correct YAML or bash command to answer the question.'),
+  validation: z.string().describe("A single `kubectl` command to verify the solution. It should output a single value."),
+  expectedValidationOutput: z.string().describe("The exact string output from the validation command."),
+});
+export type QuestionDetail = z.infer<typeof QuestionDetailSchema>;
+
 const GenerateKubernetesQuestionsOutputSchema = z.object({
-  questions: z.array(z.string()).describe('The generated Kubernetes questions.'),
+  questions: z.array(QuestionDetailSchema).describe('An array of generated Kubernetes questions.'),
 });
 export type GenerateKubernetesQuestionsOutput = z.infer<
   typeof GenerateKubernetesQuestionsOutputSchema
@@ -45,9 +55,14 @@ const generateKubernetesQuestionsPrompt = ai.definePrompt({
 
 Generate {{numQuestions}} realistic, certification-style Kubernetes questions for the {{topic}} topic with {{difficulty}} difficulty.
 
-Each question should be scenario-based and test practical knowledge of Kubernetes concepts.
+For each question, provide the following:
+1.  **text**: The scenario-based question.
+2.  **setup**: The bash commands (using kubectl) or YAML manifest required to set up the initial state for the question. If no setup is needed, provide an empty string.
+3.  **solution**: The correct bash command or YAML manifest that solves the question. This is the expected answer.
+4.  **validation**: A single \`kubectl\` command that can be used to verify the solution is correct. This command should check a specific property of a resource (e.g., an image name, a label, a replica count). It must output a single, simple value that can be easily compared. For example: \`kubectl get deployment my-deployment -o jsonpath='{.spec.replicas}'\`.
+5.  **expectedValidationOutput**: The exact string output that the \`validation\` command should produce if the solution has been applied correctly. For the replica count example, this might be '3'.
 
-Format each question as a single string in the output array. Do not provide additional explanation.`,
+Format the output as an array of objects, according to the output schema.`,
 });
 
 const generateKubernetesQuestionsFlow = ai.defineFlow(

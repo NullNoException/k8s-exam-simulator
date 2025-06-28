@@ -4,6 +4,7 @@
 import {
   generateKubernetesQuestions,
   type GenerateKubernetesQuestionsInput,
+  type QuestionDetail,
 } from '@/ai/flows/generate-kubernetes-questions';
 import { z } from 'zod';
 
@@ -15,7 +16,7 @@ const QuestionGenerationSchema = z.object({
 
 export async function generateQuestions(
   input: GenerateKubernetesQuestionsInput
-): Promise<{ questions?: string[]; error?: string }> {
+): Promise<{ questions?: QuestionDetail[]; error?: string }> {
   const validatedInput = QuestionGenerationSchema.safeParse(input);
 
   if (!validatedInput.success) {

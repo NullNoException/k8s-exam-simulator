@@ -42,12 +42,13 @@ export function HistoryView() {
   }
 
   const getSuccessRate = (session: PracticeSession) => {
+    if (!session.questions || session.questions.length === 0) return 0;
     const correct = session.questions.filter(q => q.status === 'correct').length;
     return Math.round((correct / session.questions.length) * 100);
   };
   
   return (
-    <Dialog>
+    <Dialog onOpenChange={(open) => !open && setSelectedSession(null)}>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {sortedHistory.map((session) => (
           <Card key={session.id}>
@@ -91,11 +92,29 @@ export function HistoryView() {
                      {q.status === 'correct' ? <CheckCircle2 className="text-green-500"/> : <XCircle className="text-red-500"/>}
                     <h4 className="font-semibold">Question {index + 1}</h4>
                   </div>
-                  <p className="text-muted-foreground mb-2">{q.text}</p>
-                  <p className="font-semibold text-sm">Your Answer:</p>
-                  <pre className="p-2 rounded-md bg-secondary font-code text-sm whitespace-pre-wrap">{q.userAnswer || 'No answer provided.'}</pre>
+                  <p className="text-muted-foreground mb-4">{q.text}</p>
+                  
+                  {q.setup && q.setup.length > 0 && (
+                     <div className='space-y-2 mb-2'>
+                        <p className="font-semibold text-sm">Setup Script:</p>
+                        <pre className="p-2 rounded-md bg-secondary font-code text-sm whitespace-pre-wrap">{q.setup}</pre>
+                     </div>
+                  )}
+                  
+                  <div className='space-y-2'>
+                    <p className="font-semibold text-sm">Your Answer:</p>
+                    <pre className="p-2 rounded-md bg-secondary font-code text-sm whitespace-pre-wrap">{q.userAnswer || 'No answer provided.'}</pre>
+                  </div>
+                  
+                  {q.status === 'incorrect' && q.solution && (
+                     <div className='space-y-2 mt-2'>
+                        <p className="font-semibold text-sm">Correct Solution:</p>
+                        <pre className="p-2 rounded-md bg-secondary font-code text-sm whitespace-pre-wrap">{q.solution}</pre>
+                     </div>
+                  )}
+
                   {q.feedback && (
-                     <p className="text-sm mt-2 text-muted-foreground"><span className='font-semibold'>Feedback:</span> {q.feedback}</p>
+                     <p className="text-sm mt-4 text-muted-foreground"><span className='font-semibold'>Feedback:</span> {q.feedback}</p>
                   )}
                   {index < selectedSession.questions.length - 1 && <Separator className="my-6" />}
                 </div>
